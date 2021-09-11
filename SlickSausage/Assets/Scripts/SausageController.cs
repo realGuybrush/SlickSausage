@@ -2,14 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SausageTailController : MonoBehaviour
+public class SausageController : MonoBehaviour
 {
     public Camera mainCamera;
     public LayerMask land;
-    public Rigidbody body;
-    public Rigidbody tailestTail;
-    bool follow;
-    Vector3 pointToFollow;
+    public List<Rigidbody> sausage;
+    public List<Toucher> touchers;
+    public float oneLaunchForce = 25f;
+    Vector3 launchForce;
+    private bool pulling;
+    private Vector3 pullStart, pullEnd;
     // Start is called before the first frame update
     void Start()
     {
@@ -18,15 +20,14 @@ public class SausageTailController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        body.constraints = RigidbodyConstraints.None;
+        if (CanJump())
         {
             CheckClicked();
             //CheckTouch();
-            if (follow)
+            if (pulling)
             {
-                //CastRayToTouchPoint();
-                CastRayToClickPoint();
-                Follow();
+                CalculateForce();
+                Depict();
             }
         }
     }
@@ -35,11 +36,15 @@ public class SausageTailController : MonoBehaviour
     {
         if (Input.touchCount > 0)
         {
-            follow = true;
+            pulling = true;
+            SetPullStart(Input.mousePosition);
         }
         if (Input.touchCount == 0)
         {
-            follow = false;
+            pulling = false;
+            SetPullEnd(Input.mousePosition);
+            CalculateForce();
+            ApplyForce();
         }
     }
 
@@ -47,53 +52,48 @@ public class SausageTailController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            follow = true;
-            tailestTail.constraints = RigidbodyConstraints.FreezePosition;
+            pulling = true;
+            SetPullStart(Input.mousePosition);
         }
         if (Input.GetMouseButtonUp(0))
         {
-            follow = false;
-            tailestTail.constraints = RigidbodyConstraints.None;
-            body.constraints = RigidbodyConstraints.FreezePosition;
+            pulling = false;
+            SetPullEnd(Input.mousePosition);
+            CalculateForce();
+            ApplyForce();
         }
     }
 
-    void CastRayToTouchPoint()
+    bool CanJump()
     {
-        Ray ray = mainCamera.ScreenPointToRay(new Vector3(Input.GetTouch(0).position.x, Input.GetTouch(0).position.y, 0f));
-        RaycastHit[] hit = Physics.RaycastAll(ray, 100f, land);
-        if (hit.Length > 0)
-            SetFollowPoint(hit[0].point);
+        foreach(Toucher t in touchers)
+            if(t.touches > 0)
+                return true;
+        return false;
     }
 
-    void CastRayToClickPoint()
+    void SetPullStart(Vector3 point)
     {
-        Ray ray = mainCamera.ScreenPointToRay(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0f));
-        RaycastHit[] hit = Physics.RaycastAll(ray, 100f, land);
-        if (hit.Length > 0)
-            SetFollowPoint(hit[0].point);
+        pullStart = point;
     }
 
-    public void SetFollowPoint(Vector3 newFollow)
+    void SetPullEnd(Vector3 point)
     {
-        pointToFollow = newFollow;
+        pullEnd = point;
     }
 
-    internal virtual void Follow()
+    void CalculateForce()
     {
-        //float diff = transform.position.x - pointToFollow.x;
-        //if (Mathf.Abs(diff) > 1.0f)
-        //    diff = Mathf.Sign(diff);
-        body.transform.position = new Vector3(pointToFollow.x, pointToFollow.y+0.2f, pointToFollow.z );
-    }/*
-    internal override void Follow()
+        launchForce = oneLaunchForce * new Vector3(0, pullStart.y - pullEnd.y, pullStart.x - pullEnd.x);
+    }
+
+    void Depict()
+    { 
+    }
+
+    void ApplyForce()
     {
-        float diffX = pointToFollow.x - transform.position.x;
-        float diffZ = (pointToFollow.z - transform.position.z);
-        if (Mathf.Abs(diffX) > 1.0f)
-            diffX = Mathf.Sign(diffX);
-        if (diffZ < baseDiffZ)
-            diffZ = 0;
-        body.velocity = new Vector3(velocityX * diffX, 0.0f, velocityZ * diffZ);
-    }*/
+        foreach (Rigidbody saus in sausage)
+            saus.AddForce(launchForce);
+    }
 }
