@@ -125,26 +125,34 @@ public class SausageController : MonoBehaviour
     void Depict()
     {
         float alpha = CalcAlpha()+180;
-        Debug.Log(alpha.ToString());
         Vector3 V0 = (launchForce / mass) * Time.fixedDeltaTime;
         float v0 = Mathf.Sqrt(V0.y * V0.y + V0.z * V0.z);
-        float t = 2 * V0.y / Physics.gravity.y;
         float hMax = 0.65f*v0*v0 * Mathf.Sin(Mathf.Deg2Rad * alpha) * Mathf.Sin(Mathf.Deg2Rad * alpha)/(2* Mathf.Abs(Physics.gravity.y));
         float s = 0.65f*Mathf.Abs(v0 * v0 * Mathf.Sin(2*Mathf.Deg2Rad*alpha) / Mathf.Abs(Physics.gravity.y));
         float sign = ((alpha%360>90) && (alpha % 360 < 270))?1:-1;
         CalcParabolaParams(sausage[0].transform.position.z, sausage[0].transform.position.y, sausage[0].transform.position.z + sign * s / 2, sausage[0].transform.position.y + hMax, sausage[0].transform.position.z + sign * s, sausage[0].transform.position.y);
-        for (int i = 0; i < depictingLine.Count; i++)
-        {
-            depictingLine[i].SetActive(true);
-            depictingLine[i].transform.position = new Vector3(sausage[0].transform.position.x, ParabolaPointY(sausage[0].transform.position.z+4*i), sausage[0].transform.position.z + 4*i);
-        }
+        if (denom != 0)
+            for (int i = 0; i < depictingLine.Count; i++)
+            {
+                depictingLine[i].SetActive(true);
+                depictingLine[i].transform.position = new Vector3(sausage[0].transform.position.x, ParabolaPointY(sausage[0].transform.position.z + 4 * sign * i), sausage[0].transform.position.z + 4 * sign * i);
+            }
     }
     private void CalcParabolaParams(float x1, float y1, float x2, float y2, float x3, float y3)
     {
         denom = (x1 - x2) * (x1 - x3) * (x2 - x3);
-        a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom;
-        b = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / denom;
-        c = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom;
+        if (denom != 0)
+        {
+            a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom;
+            b = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / denom;
+            c = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom;
+        }
+        else
+        { 
+            a = 0;
+            b = 0;
+            c = sausage[0].transform.position.y;
+        }
     }
 
     private float ParabolaPointY(float parabolaPointX)
