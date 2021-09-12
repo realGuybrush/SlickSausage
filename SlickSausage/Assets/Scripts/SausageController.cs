@@ -38,7 +38,7 @@ public class SausageController : MonoBehaviour
         if (CanJump())
         {
             CheckClicked();
-            //CheckTouch();
+            CheckTouch();
             if (pulling)
             {
                 SetPullEnd(Input.mousePosition);
