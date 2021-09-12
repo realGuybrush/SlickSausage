@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SausageController : MonoBehaviour
 {
@@ -14,8 +15,9 @@ public class SausageController : MonoBehaviour
     private bool pulling;
     private Vector3 pullStart, pullEnd;
     private List<GameObject> depictingLine = new List<GameObject>();
-
     private float denom, a, b, c;
+
+    Text manager;
 
     // Start is called before the first frame update
     void Start()
@@ -30,6 +32,8 @@ public class SausageController : MonoBehaviour
         {
             mass += sausage[i].mass;
         }
+
+        manager = GameObject.Find("Canvas").GetComponent<ScManager>().transform.GetChild(0).GetChild(0).gameObject.GetComponent<Text>();
     }
 
     // Update is called once per frame
@@ -37,11 +41,11 @@ public class SausageController : MonoBehaviour
     {
         if (CanJump())
         {
-            CheckClicked();
+            //CheckClicked();
             CheckTouch();
             if (pulling)
             {
-                SetPullEnd(Input.mousePosition);
+                SetPullEnd(Input.touches[0].position);
                 CalculateForce();
                 Depict();
             }
@@ -50,17 +54,20 @@ public class SausageController : MonoBehaviour
 
     void CheckTouch()
     {
-        if (Input.touchCount > 0)
+        if ((Input.touchCount > 0)&&!pulling)
         {
             pulling = true;
-            SetPullStart(Input.mousePosition);
+            SetPullStart(Input.touches[0].position);
         }
-        if (Input.touchCount == 0)
+        if ((Input.touchCount == 0)&&pulling)
         {
             pulling = false;
-            SetPullEnd(Input.mousePosition);
             CalculateForce();
             ApplyForce();
+            for (int i = 0; i < depictingLine.Count; i++)
+            {
+                depictingLine[i].SetActive(false);
+            }
         }
     }
 

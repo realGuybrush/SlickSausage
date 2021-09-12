@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Depth : MonoBehaviour
 {
+    public Transform player;
     public LayerMask sausageLayer;
     ScManager manager;
     // Start is called before the first frame update
@@ -17,6 +18,7 @@ public class Depth : MonoBehaviour
     {
         if(manager == null)
             manager = GameObject.Find("Canvas").GetComponent<ScManager>();
+        this.transform.position = new Vector3(this.transform.position.x, this.transform.position.y, player.position.z);
     }
 
     private void OnTriggerEnter(Collider other)
